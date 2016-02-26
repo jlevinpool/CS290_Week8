@@ -1,0 +1,26 @@
+{
+  "name": "CS290_Week8",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jlevinpool/CS290_Week8.git"
+  },
+  "keywords": [],
+  "author": "James Pool <poolj@oregonstate.edu>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jlevinpool/CS290_Week8/issues"
+  },
+  "homepage": "https://github.com/jlevinpool/CS290_Week8#readme",
+  "dependencies": {
+    "body-parser": "^1.15.0",
+    "express": "^4.13.4",
+    "express-handlebars": "^3.0.0",
+    "request": "^2.69.0"
+  }
+}

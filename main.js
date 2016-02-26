@@ -21,7 +21,7 @@ app.engine('handlebars', handlebars.engine);
 app.set('view engine', 'handlebars');
 
 /* Body Parser Setup */
-app.use(bodyParser.urlencoded({extended:false});
+app.use(bodyParser.urlencoded({extended:false}));
 app.use(bodyParser.json());
 
 /* CSS Setup */
@@ -31,9 +31,9 @@ app.use(express.static(__dirname + '/public'));
 app.set('port', 3081);
 
 /* Home Catcher */
-app.get('/' function(req,res){
+app.get('/', function(req,res){
 	res.render('home');
-}
+});
 
 /* Start Application */
 app.listen(app.get('port'), function(){
