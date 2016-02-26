@@ -1,0 +1,2 @@
+1. Using external credential files for creating session
+	Resolution: Misspelling in credentials file (module.export -> module.exports)
