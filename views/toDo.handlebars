@@ -4,27 +4,28 @@
 	<input type="submit" name="resetForm" value="Start Over"></input>
 </form>
 <h2>You have {{toDoCount}} items on your to do list.</h2>
-<form method="post">
+<fieldset>
+	<legend>Select Location:</legend>
+	<form method="post">
 		{{#if stateList}}
-		<label>Selected State: {{stateID}}</label>
 		<label for="stateID">State: </label>
 		<select name="stateID" onchange="this.form.submit()">
 			<option value="" disabled selected style="display:none;">(Select)</option>
 			{{#each stateList}}
-				<option value="{{this.abr}}">{{this.full}}</option>
+				{{#if this.selected}}
+					<option value="{{this.abr}}" selected>{{this.full}}</option>
+				{{else}}
+					<option value="{{this.abr}}">{{this.full}}</option>
+				{{/if}}
 			{{/each}}
 		</select>
 		{{/if}}
-</form>
+	</form>
+</fieldset>
 <form method="post">
-	<fieldset>
-		<legend>Add a new item:</legend>
 		<label for="name">Task Name: </label>
-		<input type="text" name="name" id="toDoName"></input>
-		<label for="cityName">City: </label>
-		<input type="text" name="cityName" id="cityName"></input>
+		<input type="text" name="name" id="toDoName"></input
 		<input type="submit" name="Add Item" value="Add Item">
-	</fieldset>
 </form>
 {{#if toDo}}
 <ul>

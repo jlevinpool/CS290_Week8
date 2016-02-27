@@ -28,7 +28,6 @@ app.set('view engine', 'handlebars');
 /* Session Setup */
 app.use(session({secret:(credentials.sessionKey)}));
 
-
 /* Body Parser Setup */
 app.use(bodyParser.urlencoded({extended:false}));
 app.use(bodyParser.json());
@@ -41,7 +40,6 @@ app.set('port', 3081);
 
 /* GET Catcher */
 app.get('/',function(req,res,next){
-	console.log("GET");
 	var context = {};
 	//If there is no session, go to the main page.
 	if(!req.session.name){
@@ -57,30 +55,67 @@ app.get('/',function(req,res,next){
 
 /* POST Catcher */
 app.post('/',function(req,res,next){
-  var context = {};
-  context.stateList = stateList;  //Load State List
-
-  console.log("POST");
+	var context = {};
+	context.stateList = stateList;  //Load State List
   
-  
-	if(req.body['stateID']){
-		console.log(req.body.stateID);
+	if(req.body['stateID']){  /* Handle changes to selected state */
 		req.session.stateID = req.body.stateID;
+		/* Find selected state */
+		for (var index in context.stateList) {
+			if (context.stateList[index].abr == req.session.stateID) {
+				context.stateList[index].selected = true;  //Set as selected
+			}
+		}
+		/* Request Cities */
+		request('http://api.sba.gov/geodata/city_links_for_state_of/' + req.session.stateID + '.JSON', function(err, response, body) {
+			if(!err && response.statusCode < 400) {
+				//context.qSC_raw = JSON.parse(body);
+				//console.log("HERE");
+				/* context.qSC = [];
+				for (var cityIndex in context.qSC_raw) {
+					//context.qSC.push({'name':context.qSC_raw[cityIndex].name});
+					context.qSC.push(context.qSC_raw[cityIndex].name);
+				}
+				context.qSC.sort();
+				console.log(context.qSC); */
+				res.render('newSession', context);
+			}
+			else {
+				next(err);
+			}
+			
+		});
+	}
+	
+	console.log(context.qSC_raw);
+  
+	if(req.body['New List']){
+		req.session.name = req.body.name;
+		req.session.toDo = [];
+		req.session.curId = 0;
+	}
+
+	//If there is no session, go to the main page.
+	if(!req.session.name){
+		/* Remove selected state property */
+		for (var index in context.stateList) {
+			if (context.stateList[index].selected) {
+				context.stateList[index].selected = undefined;  //Set as undefined
+			}
+		}
+		context.qSC = undefined;  //Set as undefined
+		res.render('newSession', context);
+		return;
 	}
   
-  if(req.body['New List']){
-    req.session.name = req.body.name;
-    req.session.toDo = [];
-    req.session.curId = 0;
-  }
-
-  //If there is no session, go to the main page.
-  if(!req.session.name){
-    res.render('newSession', context);
-    return;
-  }
-  
 	if(req.body['resetForm']) {
+		/* Remove selected state property */
+		for (var index in context.stateList) {
+			if (context.stateList[index].selected) {
+				context.stateList[index].selected = undefined;  //Set as undefined
+			}
+		}
+		context.qSC = undefined;  //Set as undefined
 		res.render('newSession', context);
 		return;
 	}
@@ -100,8 +135,6 @@ app.post('/',function(req,res,next){
   context.name = req.session.name;
   context.toDoCount = req.session.toDo.length;
   context.toDo = req.session.toDo;
-  console.log(context.toDo);
-  console.log(context);
   res.render('toDo',context);
 });
 
