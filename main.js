@@ -18,6 +18,7 @@ var handlebars = require('express-handlebars').create({defaultLayout:'main'});
 var session = require('express-session');
 var bodyParser = require('body-parser');
 var credentials = require('./credentials.js');
+var stateList = require('./stateListUSA.js');
 var request = require('request');
 
 /* Handlebars Setup */
@@ -57,7 +58,16 @@ app.get('/',function(req,res,next){
 /* POST Catcher */
 app.post('/',function(req,res,next){
   var context = {};
+  context.stateList = stateList;  //Load State List
 
+  console.log("POST");
+  
+  
+	if(req.body['stateID']){
+		console.log(req.body.stateID);
+		req.session.stateID = req.body.stateID;
+	}
+  
   if(req.body['New List']){
     req.session.name = req.body.name;
     req.session.toDo = [];
@@ -86,11 +96,18 @@ app.post('/',function(req,res,next){
     })
   }
 
+  context.stateID = req.session.stateID;
   context.name = req.session.name;
   context.toDoCount = req.session.toDo.length;
   context.toDo = req.session.toDo;
+  console.log(context.toDo);
+  console.log(context);
   res.render('toDo',context);
 });
+
+function jsFunction(){
+	console.log("jsFunction!");
+}
 
 /* ERROR Handler */
 app.use(function(req,res){

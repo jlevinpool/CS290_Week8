@@ -5,8 +5,26 @@
 </form>
 <h2>You have {{toDoCount}} items on your to do list.</h2>
 <form method="post">
-  <input type="text" name="name" id="toDoName">
-  <input type="submit" name="Add Item" value="Add Item">
+		{{#if stateList}}
+		<label>Selected State: {{stateID}}</label>
+		<label for="stateID">State: </label>
+		<select name="stateID" onchange="this.form.submit()">
+			<option value="" disabled selected style="display:none;">(Select)</option>
+			{{#each stateList}}
+				<option value="{{this.abr}}">{{this.full}}</option>
+			{{/each}}
+		</select>
+		{{/if}}
+</form>
+<form method="post">
+	<fieldset>
+		<legend>Add a new item:</legend>
+		<label for="name">Task Name: </label>
+		<input type="text" name="name" id="toDoName"></input>
+		<label for="cityName">City: </label>
+		<input type="text" name="cityName" id="cityName"></input>
+		<input type="submit" name="Add Item" value="Add Item">
+	</fieldset>
 </form>
 {{#if toDo}}
 <ul>
@@ -21,3 +39,4 @@
   {{/each}}
 </ul>
 {{/if}}
+

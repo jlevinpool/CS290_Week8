@@ -1,2 +1,5 @@
 1. Using external credential files for creating session
 	Resolution: Misspelling in credentials file (module.export -> module.exports)
+2. Incorporating an existing USA State List into dropdown
+	Steps: Created array of objects in custom module, utilized handlebars to insert into select list
+	Wasn't able to find a web API for pulling this information :(
