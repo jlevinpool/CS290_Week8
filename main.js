@@ -130,6 +130,7 @@ app.post('/',function(req,res,next){
 	context.toDoCount = context.toDo.length;
 	context.stateList = req.session.stateList;
 	context.qSC = req.session.qSC;
+	context.httpbin = req.session.httpbin;
  
 	//If there is no session or reset was sent, go to the main page.
 	if((req.body['resetForm']) || (!req.session.name)) {
@@ -163,7 +164,7 @@ app.post('/',function(req,res,next){
 				});
 				context.qSC = req.session.qSC;  //Copy cities to context
 				/* Send post of response to httpbin via POST*/
-				request({'url':'http://httpbin.org/post/}',
+				request({'url':'http://httpbin.org/post',
 						'method':'POST',
 						'headers':{'Content-Type':'application/json'},
 						'body':JSON.stringify(req.session.qSC)}, httpbinPost);				
@@ -175,7 +176,8 @@ app.post('/',function(req,res,next){
 		}
 		function httpbinPost(err, response, body) {
 			if (!err && response.statusCode < 400) {
-				context.httpbin = body;
+				req.session.httpbin = body;
+				context.httpbin = req.session.httpbin;
 				res.render('toDo',context);
 			}
 			else {
