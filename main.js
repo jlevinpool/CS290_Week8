@@ -141,13 +141,17 @@ app.post('/',function(req,res,next){
 	if (req.body['stateID']) {
 		req.session.stateID = req.body.stateID;  //Get stateID from body
 		_selectState(req.session);
-		request('http://api.sba.gov/geodata/city_links_for_state_of/' + req.session.stateID + '.JSON', function(err, response, body) {
+		request('http://api.sba.gov/geodata/city_links_for_state_of/' + req.session.stateID + '.JSON', sbaGet);
+		/* Request Data from SBA */
+		function sbaGet(err, response, body) {
 			if(!err && response.statusCode < 400) {
+				/* Process response from SBA */
 				var qSC_raw = JSON.parse(body);
 				req.session.qSC = [];
 				for (var cityIndex in qSC_raw) {
 					req.session.qSC.push({'id':cityIndex, 'name':qSC_raw[cityIndex].name});
 				}
+				/* Sort Results */
 				req.session.qSC.sort(function(a,b) {  /* Standard sort() was having issues with object */
 					if (a.name > b.name) {
 						return 1;
@@ -158,13 +162,27 @@ app.post('/',function(req,res,next){
 					return 0;
 				});
 				context.qSC = req.session.qSC;  //Copy cities to context
-				res.render('toDo',context);
+				/* Send post of response to httpbin via POST*/
+				request({'url':'http://httpbin.org/post/}',
+						'method':'POST',
+						'headers':{'Content-Type':'application/json'},
+						'body':JSON.stringify(req.session.qSC)}, httpbinPost);				
 			}
-			else {;
-				console.log(response.statusCode);
+			else {
+				console.log(response.statusCode + " - " + response.status);
 				next(err);
 			}
-		});
+		}
+		function httpbinPost(err, response, body) {
+			if (!err && response.statusCode < 400) {
+				context.httpbin = body;
+				res.render('toDo',context);
+			}
+			else {
+				console.log(response.statusCode + " - " + response.status);
+				next(err);
+			}
+		}
 		return;
 	}
 		
