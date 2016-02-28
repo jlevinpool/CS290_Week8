@@ -103,7 +103,8 @@ app.post('/',function(req,res,next){
 	
 	/* Add item to List */
 	if(req.body['Add Item']){
-		req.session.toDo.push({"name":req.body.name, "id":req.session.curId});
+		req.session.toDo.push({"name":req.body.name, "id":req.session.curId, 
+			"city":req.session.cityName, "state":req.session.stateID});
 		req.session.curId++;
 	}
 
@@ -157,7 +158,6 @@ app.post('/',function(req,res,next){
 					return 0;
 				});
 				context.qSC = req.session.qSC;  //Copy cities to context
-				console.log(context.qSC);
 				res.render('toDo',context);
 			}
 			else {;
@@ -170,10 +170,6 @@ app.post('/',function(req,res,next){
 		
 	res.render('toDo',context);
 });
-
-function jsFunction(){
-	console.log("jsFunction!");
-}
 
 /* ERROR Handler */
 app.use(function(req,res){

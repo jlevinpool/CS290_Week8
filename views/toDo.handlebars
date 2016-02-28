@@ -49,6 +49,9 @@
   {{#each toDo}}
   <li>
     <h3>{{this.name}}</h3>
+	<ul>  <!-- Location and Temperateure -->
+		<li>Location: {{city}}, {{state}}</li>
+	</ul>
     <form method="post">
       <input type="hidden" name="id" value="{{this.id}}">
       <input type="submit" name="Done" value="Mark as Done">
