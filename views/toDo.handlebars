@@ -6,7 +6,7 @@
 <h2>You have {{toDoCount}} items on your to do list.</h2>
 <fieldset>
 	<legend>Select Location:</legend>
-	<form method="post">
+	<form action="/State" method="post">
 		{{#if stateList}}
 		<label for="stateID">State: </label>
 		<select name="stateID" onchange="this.form.submit()">
@@ -21,10 +21,21 @@
 		</select>
 		{{/if}}
 	</form>
+	<p>Test Area: </p>
+	{{#if qSC}}
+		<select name="cityName">
+			<option value="" disabled selected style="display:none;">(Select)</option>
+			{{#each qSC}}
+				<option value="{{this.name}}">{{this.name}}</option>
+			{{/each}}
+		</select>
+	{{else}}
+		<p>No qSC!</p>
+	{{/if}}
 </fieldset>
 <form method="post">
 		<label for="name">Task Name: </label>
-		<input type="text" name="name" id="toDoName"></input
+		<input type="text" name="name" id="toDoName"></input>
 		<input type="submit" name="Add Item" value="Add Item">
 </form>
 {{#if toDo}}

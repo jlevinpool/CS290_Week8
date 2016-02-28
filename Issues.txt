@@ -3,3 +3,5 @@
 2. Incorporating an existing USA State List into dropdown
 	Steps: Created array of objects in custom module, utilized handlebars to insert into select list
 	Wasn't able to find a web API for pulling this information :(
+3. sort() wasn't working correctly for objects
+	Resolution: Created a comparitor function in sort

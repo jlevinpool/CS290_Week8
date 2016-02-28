@@ -38,6 +38,50 @@ app.use(express.static(__dirname + '/public'));
 /* Application Port */
 app.set('port', 3081);
 
+/* Generate City Dropdown */
+app.post('/State',function(req,res,next){
+	/* Setup page context */
+	context = {};
+	context.name = req.session.name;
+	context.toDoCount = req.session.toDo.length;
+	context.toDo = req.session.toDo;
+	context.stateList = stateList;  //Load State List
+	context.stateID = req.body.stateID;
+	for (var stateIdx in context.stateList) {
+		if (context.stateList[stateIdx].abr == context.stateID) {
+			context.stateList[stateIdx].selected = true;  //Set as selected
+		}
+		else {
+			context.stateList[stateIdx].selected = undefined;  //Clear selected
+		}
+	}
+	console.log(context);
+	
+	request('http://api.sba.gov/geodata/city_links_for_state_of/' + context.stateID + '.JSON', function(err, response, body) {
+		if(!err && response.statusCode < 400) {
+			req.session.qSC_raw = JSON.parse(body);
+			context.qSC_raw = JSON.parse(body);
+			context.qSC = [];
+			for (var cityIndex in context.qSC_raw) {
+				context.qSC.push({'name':context.qSC_raw[cityIndex].name});
+			}
+			context.qSC.sort(function(a,b) {  /* Standard sort() was having issues with object */
+				if (a.name > b.name) {
+					return 1;
+				}
+				if (a.name < b.name) {
+					return -1;
+				}
+				return 0;
+			});
+			res.render('toDo',context);
+		}
+		else {
+			next(err);
+		}
+	});
+});
+
 /* GET Catcher */
 app.get('/',function(req,res,next){
 	var context = {};
@@ -57,37 +101,6 @@ app.get('/',function(req,res,next){
 app.post('/',function(req,res,next){
 	var context = {};
 	context.stateList = stateList;  //Load State List
-  
-	if(req.body['stateID']){  /* Handle changes to selected state */
-		req.session.stateID = req.body.stateID;
-		/* Find selected state */
-		for (var index in context.stateList) {
-			if (context.stateList[index].abr == req.session.stateID) {
-				context.stateList[index].selected = true;  //Set as selected
-			}
-		}
-		/* Request Cities */
-		request('http://api.sba.gov/geodata/city_links_for_state_of/' + req.session.stateID + '.JSON', function(err, response, body) {
-			if(!err && response.statusCode < 400) {
-				//context.qSC_raw = JSON.parse(body);
-				//console.log("HERE");
-				/* context.qSC = [];
-				for (var cityIndex in context.qSC_raw) {
-					//context.qSC.push({'name':context.qSC_raw[cityIndex].name});
-					context.qSC.push(context.qSC_raw[cityIndex].name);
-				}
-				context.qSC.sort();
-				console.log(context.qSC); */
-				res.render('newSession', context);
-			}
-			else {
-				next(err);
-			}
-			
-		});
-	}
-	
-	console.log(context.qSC_raw);
   
 	if(req.body['New List']){
 		req.session.name = req.body.name;
