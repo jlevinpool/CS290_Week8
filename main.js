@@ -38,50 +38,6 @@ app.use(express.static(__dirname + '/public'));
 /* Application Port */
 app.set('port', 3081);
 
-/* Generate City Dropdown */
-app.post('/State',function(req,res,next){
-	/* Setup page context */
-	context = {};
-	context.name = req.session.name;
-	context.toDoCount = req.session.toDo.length;
-	context.toDo = req.session.toDo;
-	context.stateList = stateList;  //Load State List
-	context.stateID = req.body.stateID;
-	for (var stateIdx in context.stateList) {
-		if (context.stateList[stateIdx].abr == context.stateID) {
-			context.stateList[stateIdx].selected = true;  //Set as selected
-		}
-		else {
-			context.stateList[stateIdx].selected = undefined;  //Clear selected
-		}
-	}
-	console.log(context);
-	
-	request('http://api.sba.gov/geodata/city_links_for_state_of/' + context.stateID + '.JSON', function(err, response, body) {
-		if(!err && response.statusCode < 400) {
-			req.session.qSC_raw = JSON.parse(body);
-			context.qSC_raw = JSON.parse(body);
-			context.qSC = [];
-			for (var cityIndex in context.qSC_raw) {
-				context.qSC.push({'name':context.qSC_raw[cityIndex].name});
-			}
-			context.qSC.sort(function(a,b) {  /* Standard sort() was having issues with object */
-				if (a.name > b.name) {
-					return 1;
-				}
-				if (a.name < b.name) {
-					return -1;
-				}
-				return 0;
-			});
-			res.render('toDo',context);
-		}
-		else {
-			next(err);
-		}
-	});
-});
-
 /* GET Catcher */
 app.get('/',function(req,res,next){
 	var context = {};
@@ -97,58 +53,122 @@ app.get('/',function(req,res,next){
 	res.render('toDo',context);
 });
 
+/* Reset Form */
+function _ResetForm(context) {
+	/* Remove selected state property */
+	for (var index in context.stateList) {
+		if (context.stateList[index].selected) {
+			context.stateList[index].selected = undefined;  //Set as undefined
+		}
+	}
+	context.qSC = undefined;  //Set as undefined
+	return context;
+}
+
+/* Set Selected State */
+function _selectState(session) {
+	for (var stateIdx in session.stateList) {
+		if (session.stateList[stateIdx].abr == session.stateID) {
+			session.stateList[stateIdx].selected = true;  //Set as selected
+		}
+		else {
+			session.stateList[stateIdx].selected = undefined;  //Clear selected
+		}
+	}
+}
+
+function _selectCity(session) {
+	for (var cityIdx in session.qSC) {
+		if (session.qSC[cityIdx].id == session.cityID) {
+			session.qSC[cityIdx].selected = true;  //Set as selected
+			session.cityName = session.qSC[cityIdx].name;
+		}
+		else {
+			session.qSC[cityIdx].selected = undefined;  //Clear selected
+		}
+	}
+}
+
 /* POST Catcher */
 app.post('/',function(req,res,next){
 	var context = {};
-	context.stateList = stateList;  //Load State List
-  
-	if(req.body['New List']){
+	
+	/* Create new list (aka new session)*/
+ 	if(req.body['New List']){
 		req.session.name = req.body.name;
 		req.session.toDo = [];
 		req.session.curId = 0;
+		req.session.stateList = stateList;  //Load State List
+	}
+	
+	/* Add item to List */
+	if(req.body['Add Item']){
+		req.session.toDo.push({"name":req.body.name, "id":req.session.curId});
+		req.session.curId++;
 	}
 
-	//If there is no session, go to the main page.
-	if(!req.session.name){
-		/* Remove selected state property */
-		for (var index in context.stateList) {
-			if (context.stateList[index].selected) {
-				context.stateList[index].selected = undefined;  //Set as undefined
-			}
-		}
-		context.qSC = undefined;  //Set as undefined
-		res.render('newSession', context);
+	/* Remove item from list */
+	if(req.body['Done']){
+		req.session.toDo = req.session.toDo.filter(function(e){
+			return e.id != req.body.id;
+		})
+	}
+	
+		/* Handle City Dropdown */
+	if (req.body['cityID']) {
+		req.session.cityID = req.body.cityID;  //Get cityID from body
+		_selectCity(req.session);
+		
+	}
+	
+	/* Copy session into context */
+	context.stateID = req.session.stateID;
+	context.cityName = req.session.cityName;	
+	context.name = req.session.name;
+	context.toDo = req.session.toDo || [];
+	context.toDoCount = context.toDo.length;
+	context.stateList = req.session.stateList;
+	context.qSC = req.session.qSC;
+ 
+	//If there is no session or reset was sent, go to the main page.
+	if((req.body['resetForm']) || (!req.session.name)) {
+		res.render('newSession', _ResetForm(context));
 		return;
 	}
-  
-	if(req.body['resetForm']) {
-		/* Remove selected state property */
-		for (var index in context.stateList) {
-			if (context.stateList[index].selected) {
-				context.stateList[index].selected = undefined;  //Set as undefined
+	
+	/* Handle State Dropdown */
+	if (req.body['stateID']) {
+		req.session.stateID = req.body.stateID;  //Get stateID from body
+		_selectState(req.session);
+		request('http://api.sba.gov/geodata/city_links_for_state_of/' + req.session.stateID + '.JSON', function(err, response, body) {
+			if(!err && response.statusCode < 400) {
+				var qSC_raw = JSON.parse(body);
+				req.session.qSC = [];
+				for (var cityIndex in qSC_raw) {
+					req.session.qSC.push({'id':cityIndex, 'name':qSC_raw[cityIndex].name});
+				}
+				req.session.qSC.sort(function(a,b) {  /* Standard sort() was having issues with object */
+					if (a.name > b.name) {
+						return 1;
+					}
+					if (a.name < b.name) {
+						return -1;
+					}
+					return 0;
+				});
+				context.qSC = req.session.qSC;  //Copy cities to context
+				console.log(context.qSC);
+				res.render('toDo',context);
 			}
-		}
-		context.qSC = undefined;  //Set as undefined
-		res.render('newSession', context);
+			else {;
+				console.log(response.statusCode);
+				next(err);
+			}
+		});
 		return;
 	}
-
-  if(req.body['Add Item']){
-    req.session.toDo.push({"name":req.body.name, "id":req.session.curId});
-    req.session.curId++;
-  }
-
-  if(req.body['Done']){
-    req.session.toDo = req.session.toDo.filter(function(e){
-      return e.id != req.body.id;
-    })
-  }
-
-  context.stateID = req.session.stateID;
-  context.name = req.session.name;
-  context.toDoCount = req.session.toDo.length;
-  context.toDo = req.session.toDo;
-  res.render('toDo',context);
+		
+	res.render('toDo',context);
 });
 
 function jsFunction(){
